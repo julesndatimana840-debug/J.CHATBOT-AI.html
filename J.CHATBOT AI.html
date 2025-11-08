@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>J.CHATBOT AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="c:\Users\JULE--\Pictures\ChatGPT Image Nov 6, 2025, 04_59_01 PM.png" />
+<style>
+  :root{
+    --bg:#0d0d0d; --text:#fff; --box:#181818; --accent:#33ffc4;
+  }
+  body.light { --bg:#f2f2f2; --text:#000; --box:#fff; --accent:#00bfa5; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:Poppins, Arial, sans-serif; margin:0; padding:0;
+    display:flex; flex-direction:column; align-items:center;
+    transition:.3s background-color, .3s color;
+  }
+  header {
+    background:var(--box); width:100%; display:flex;
+    align-items:center; justify-content:space-between;
+    padding:10px 20px; position:sticky; top:0; z-index:100;
+  }
+  header h1 { color:var(--accent); font-size:1.25em; margin:0; font-weight:600; }
+  .icons{display:flex;gap:12px;align-items:center;}
+  .icon-btn{cursor:pointer;font-size:1.35em;color:var(--text);transition:.18s; padding:6px; border-radius:6px;}
+  .icon-btn:hover{color:var(--accent); background: rgba(255,255,255,0.02);}
+  .container{
+    background:var(--box);width:90%;max-width:760px;border-radius:10px;
+    margin-top:20px;padding:18px;box-shadow:0 2px 15px rgba(51,255,196,.06);
+  }
+  .history{
+    height:420px;overflow-y:auto;background:var(--bg); color:var(--text);
+    border-radius:8px;padding:12px; border:1px solid rgba(255,255,255,0.02);
+  }
+  .message{margin:8px 0; display:flex; gap:8px; align-items:flex-start;}
+  .message.user { justify-content:flex-end; }
+  .bubble { max-width:78%; padding:10px 12px; border-radius:8px; line-height:1.35; }
+  .bubble.user { background:linear-gradient(135deg,#0b2f6b,#0f5ac0); color:#fff; border-radius:10px 10px 4px 10px; }
+  .bubble.assistant { background:rgba(255,255,255,.03); color:var(--text); border-left:3px solid var(--accent); }
+  .input-container{display:flex;margin-top:14px;gap:8px; align-items:center;}
+  textarea{
+    flex:1;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);resize:none;
+    font-size:1em;background:transparent;color:var(--text); min-height:60px;
+  }
+  button{
+    background:var(--accent);border:none;color:#000;padding:10px 14px;
+    border-radius:6px;cursor:pointer;margin-left:0;font-weight:700;
+  }
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text); padding:8px 10px;border-radius:6px;cursor:pointer;}
+  .small { font-size:.9em;color:rgba(255,255,255,0.6); }
+
+  .modal{
+    display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);
+    background:var(--box); padding:14px;border-radius:8px;width:320px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.6);z-index:999;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+  .modal h3{margin:0 0 8px 0;color:var(--accent);font-size:1.05em;}
+  .close-btn{float:right;cursor:pointer;color:gray;}
+  .field{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  select, input[type="range"]{
+    padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text);
+  }
+  input[type="range"]{width:100%;}
+  .history-list{max-height:260px;overflow:auto;font-size:.92em;padding-top:6px;}
+  .history-item{padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:8px;}
+
+  @media (max-width:640px){
+    .container{ width:95%; padding:12px; }
+    .modal{ width:92%; left:50%; transform:translateX(-50%); top:60px; }
+  }
+  header h1 { color:var(--accent); font-size:1.4em; margin:0; }
+header .logo {
+  display:flex; align-items:center; gap:10px;
+}
+header .logo img {
+  height:38px; width:38px; border-radius:6px; object-fit:cover;
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="icons">
+    <span class="icon-btn" id="historyIcon" title="History">📜</span>
+    <span class="icon-btn" id="settingsIcon" title="Settings">⚙️</span>
+    <span class="icon-btn" id="searchIcon" title="Search history">🔍</span>
+  </div>
+  <div class="logo">
+    <!-- ===== Replace 'assets/nj-ai-logo.png' with your own image ===== -->
+    <img src="c:\Users\JULE--\Pictures\ChatGPT Image Nov 6, 2025, 04_59_01 PM.png" alt="NJ-AI Logo" />
+    <h1>J.CHATBOT AI</h1>
+  </div>
+  <span class="icon-btn" id="themeToggle" title="Toggle theme">🌙</span>
+</header>
+
+<div class="container">
+  <div class="history" id="history"></div>
+
+  <div class="input-container">
+    <textarea id="userInput" placeholder="Type or use mic..."></textarea>
+    <button class="btn-ghost" id="micBtn" title="Voice input">🎤</button>
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;">
+  <button class="btn-ghost" id="voiceBtn">🔊 Speak Last</button>
+  <button class="btn-ghost" id="toggleSoundBtn">🔈 Sound: ON</button>
+  <button class="btn-ghost" id="clearBtn">🗑️ Clear</button>
+</div>
+    <div class="small"><font-color="black">Tip: For more info conctact : <u><font-color="blue"><b>0791058970 JULES .</b></font-color></u></font-color></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal" id="settingsModal">
+  <span class="close-btn" id="closeSettings">✖</span>
+  <h3>Settings</h3>
+  <div class="field">
+    <label class="small">Model</label>
+    <select id="modelSelect">
+      <option value="gpt-4o-mini">gpt-4o-mini</option>
+      <option value="gpt-4-turbo">gpt-4-turbo</option>
+      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+    </select>
+  </div>
+  <div class="field">
+    <label class="small">Temperature: <span id="tempVal">0.5</span></label>
+    <input type="range" id="tempRange" min="0" max="1" step="0.05" value="0.5" />
+  </div>
+  <div class="field">
+    <label class="small">Voice rate: <span id="vrVal">1.0</span></label>
+    <input type="range" id="voiceRate" min="0.5" max="2.0" step="0.1" value="1.0" />
+  </div>
+  <div class="field">
+    <label class="small">Voice pitch: <span id="vpVal">1.0</span></label>
+    <input type="range" id="voicePitch" min="0.5" max="2.0" step="0.1" value="1.0" />
+  </div>
+  <div class="field">
+    <label class="small">Theme</label>
+    <select id="themeSelect">
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px; margin-top:10px;">
+    <button class="btn-ghost" id="clearHist">Clear History</button>
+  </div>
+</div>
+
+<!-- History modal -->
+<div class="modal" id="historyModal">
+  <span class="close-btn" id="closeHistory">✖</span>
+  <h3>Chat History</h3>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- Search modal -->
+<div class="modal" id="searchModal">
+  <span class="close-btn" id="closeSearch">✖</span>
+  <h3>Search</h3>
+  <div class="field">
+    <input id="searchQ" type="text" placeholder="Search all saved messages..." />
+    <div id="searchResults" class="history-list" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<script>
+/* ===== Jules AI v3 (AI DEVELOP) =====
+   Simplified version:
+   - same layout
+   - Smart logic merged (model, theme, voice)
+   - API key defined directly below ↓
+=====================================*/
+
+const API_KEY = "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";   // ← put your OpenAI API key here
+
+const STORAGE_HISTORY = 'ai_develop_history_v1';
+const STORAGE_SETTINGS = 'ai_develop_settings_v1';
+
+const historyDiv = document.getElementById('history');
+const sendBtn = document.getElementById('sendBtn');
+const userInput = document.getElementById('userInput');
+const micBtn = document.getElementById('micBtn');
+const voiceBtn = document.getElementById('voiceBtn');
+const clearBtn = document.getElementById('clearBtn');
+const settingsIcon = document.getElementById('settingsIcon');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettings = document.getElementById('closeSettings');
+const modelSelect = document.getElementById('modelSelect');
+const tempRange = document.getElementById('tempRange');
+const tempVal = document.getElementById('tempVal');
+const voiceRate = document.getElementById('voiceRate');
+const vrVal = document.getElementById('vrVal');
+const voicePitch = document.getElementById('voicePitch');
+const vpVal = document.getElementById('vpVal');
+const themeSelect = document.getElementById('themeSelect');
+const themeToggle = document.getElementById('themeToggle');
+const historyIcon = document.getElementById('historyIcon');
+const historyModal = document.getElementById('historyModal');
+const historyList = document.getElementById('historyList');
+const closeHistory = document.getElementById('closeHistory');
+const clearHist = document.getElementById('clearHist');
+const searchIcon = document.getElementById('searchIcon');
+const searchModal = document.getElementById('searchModal');
+const searchQ = document.getElementById('searchQ');
+const searchResults = document.getElementById('searchResults');
+const closeSearch = document.getElementById('closeSearch');
+
+let SETTINGS = JSON.parse(localStorage.getItem(STORAGE_SETTINGS) || JSON.stringify({
+  model:'gpt-4o-mini', temperature:0.5, voiceRate:1.0, voicePitch:1.0, theme:'dark', soundOn:true
+}));
+document.body.classList.toggle('light', SETTINGS.theme==='light');
+themeToggle.textContent = SETTINGS.theme==='light' ? '☀️' : '🌙';
+modelSelect.value = SETTINGS.model;
+tempRange.value = SETTINGS.temperature;
+voiceRate.value = SETTINGS.voiceRate;
+voicePitch.value = SETTINGS.voicePitch;
+themeSelect.value = SETTINGS.theme;
+tempVal.textContent = SETTINGS.temperature;
+vrVal.textContent = SETTINGS.voiceRate;
+vpVal.textContent = SETTINGS.voicePitch;
+
+function getHistory(){ return JSON.parse(localStorage.getItem(STORAGE_HISTORY)||'[]'); }
+function saveHistory(a){ localStorage.setItem(STORAGE_HISTORY,JSON.stringify(a)); }
+function addHistory(m){ const a=getHistory(); a.push(m); saveHistory(a); renderChat(); }
+function clearHistory(){ localStorage.removeItem(STORAGE_HISTORY); renderChat(); }
+
+function renderChat(){
+  const arr = getHistory();
+  historyDiv.innerHTML='';
+  arr.forEach(m=>{
+    const div=document.createElement('div');
+    div.className='message '+(m.role==='user'?'user':'JULES AI');
+    const b=document.createElement('div');
+    b.className='bubble '+(m.role==='user'?'user':'JULES AI');
+    b.innerHTML=m.content.replace(/\n/g,'<br>');
+    div.appendChild(b);
+    historyDiv.appendChild(div);
+  });
+  historyDiv.scrollTop=historyDiv.scrollHeight;
+}
+renderChat();
+
+async function detectLang(text){
+  try{
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY},
+      body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:"Detect language and reply code only (en,fr,rw)."}, {role:'user',content:text}],max_tokens:8})
+    });
+    const d=await r.json();
+    return (d.choices?.[0]?.message?.content||'en').trim().toLowerCase();
+  }catch{return'en';}
+}
+
+async function sendMessage(){
+  const q=userInput.value.trim(); if(!q) return;
+  addHistory({role:'user',content:q,ts:Date.now()});
+  userInput.value='';
+  addHistory({role:'assistant',content:'Typing...',ts:Date.now()});
+  try{
+    const lang=await detectLang(q);
+    const arr=getHistory().slice(-10).map(h=>({role:h.role,content:h.content}));
+    const sys={role:'system',content:`You are a helpful AI and reply in ${lang}.`};
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+API_KEY},
+      body:JSON.stringify({model:SETTINGS.model,messages:[sys,...arr,{role:'user',content:q}],temperature:SETTINGS.temperature})
+    });
+    const d=await r.json();
+    const ans=d.choices?.[0]?.message?.content||'No reply.';
+    let a=getHistory(); a.pop(); a.push({role:'assistant',content:ans,ts:Date.now()}); saveHistory(a); renderChat(); speak(ans);
+  }catch(e){
+    let a=getHistory(); a.pop(); a.push({role:'assistant',content:'⚠️ '+e.message,ts:Date.now()}); saveHistory(a); renderChat();
+  }
+}
+
+function speak(t){
+  if(!SETTINGS.soundOn) return; // 🔇 Sound turned off
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(t);
+  u.rate = SETTINGS.voiceRate;
+  u.pitch = SETTINGS.voicePitch;
+  window.speechSynthesis.speak(u);
+}
+
+function speakLast(){const a=getHistory();const l=[...a].reverse().find(m=>m.role==='assistant');if(l)speak(l.content);}
+function startListening(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return alert('Voice input not supported.');const r=new SR();r.lang='auto';r.start();r.onresult=e=>userInput.value=e.results[0][0].transcript;}
+
+sendBtn.onclick=sendMessage;
+userInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+micBtn.onclick=startListening;
+voiceBtn.onclick=speakLast;
+clearBtn.onclick=()=>{historyDiv.innerHTML='';};
+const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+toggleSoundBtn.onclick = ()=>{
+  SETTINGS.soundOn = !SETTINGS.soundOn;
+  toggleSoundBtn.textContent = SETTINGS.soundOn ? '🔈 Sound: ON' : '🔇 Sound: OFF';
+  localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(SETTINGS));
+};
+
+settingsIcon.onclick=()=>settingsModal.style.display='block';
+closeSettings.onclick=()=>{settingsModal.style.display='none';saveSettings();};
+themeToggle.onclick=()=>{SETTINGS.theme=SETTINGS.theme==='light'?'dark':'light';saveSettings();};
+historyIcon.onclick=()=>{renderHistoryList();historyModal.style.display='block';};
+closeHistory.onclick=()=>historyModal.style.display='none';
+clearHist.onclick=()=>{if(confirm('Clear all history?')){clearHistory();alert('History cleared.');}};
+searchIcon.onclick=()=>{searchModal.style.display='block';searchQ.focus();};
+closeSearch.onclick=()=>searchModal.style.display='none';
+searchQ.onkeydown=e=>{if(e.key==='Enter')searchHistory();};
+
+function renderHistoryList(){
+  const arr=getHistory().slice().reverse();
+  historyList.innerHTML=arr.map(m=>`<div class="history-item"><b>${m.role}</b> • ${new Date(m.ts).toLocaleString()}<div>${m.content}</div></div>`).join('')||'<div class="small">No history</div>';
+}
+function searchHistory(){
+  const q=searchQ.value.trim().toLowerCase();
+  const arr=getHistory().filter(m=>(m.content||'').toLowerCase().includes(q));
+  searchResults.innerHTML=arr.map(m=>`<div class="history-item"><b>${m.role}</b> • ${new Date(m.ts).toLocaleString()}<div>${m.content}</div></div>`).join('')||'<div class="small">No results</div>';
+}
+
+function saveSettings(){
+  SETTINGS.model=modelSelect.value;
+  SETTINGS.temperature=parseFloat(tempRange.value);
+  SETTINGS.voiceRate=parseFloat(voiceRate.value);
+  SETTINGS.voicePitch=parseFloat(voicePitch.value);
+  SETTINGS.theme=themeSelect.value;
+  localStorage.setItem(STORAGE_SETTINGS,JSON.stringify(SETTINGS));
+  document.body.classList.toggle('light',SETTINGS.theme==='light');
+  themeToggle.textContent=SETTINGS.theme==='light'?'☀️':'🌙';
+}
+tempRange.oninput=()=>tempVal.textContent=tempRange.value;
+voiceRate.oninput=()=>vrVal.textContent=voiceRate.value;
+voicePitch.oninput=()=>vpVal.textContent=voicePitch.value;
+themeSelect.onchange=saveSettings;
+modelSelect.onchange=saveSettings;
+</script>
+</body>
+</html>
